@@ -8,7 +8,7 @@ function show_help() {
     echo "  -d, --docker [CONTAINER_NAME] List Docker images and containers or details of a specific container"
     echo "  -n, --nginx [DOMAIN]          Display Nginx domains and ports or details of a specific domain"
     echo "  -u, --users [USERNAME]        List all users and last login times or details of a specific user"
-    echo "  -t, --time [TIME_RANGE]       Display activities within a specified time range"
+    echo "  -t, --time [START_DATE END_DATE] Display activities within a specified time range"
     echo "  -h, --help                    Show this help message"
 }
 
@@ -49,10 +49,18 @@ function display_users() {
     fi
 }
 
-# Function to display activities within a specified time range (dummy implementation)
+# Function to display activities within a specified time range
 function display_time() {
-    echo "Displaying activities from $1"
-    # Add your custom time range handling code here
+    if [ -n "$2" ]; then
+        start_date=$(date -d "$1" +"%Y-%m-%d")
+        end_date=$(date -d "$2" +"%Y-%m-%d")
+        echo "Displaying activities from $start_date to $end_date"
+        sudo journalctl --since "$start_date" --until "$end_date"
+    else
+        specific_date=$(date -d "$1" +"%Y-%m-%d")
+        echo "Displaying activities on $specific_date"
+        sudo journalctl --since "$specific_date" --until "$specific_date 23:59:59"
+    fi
 }
 
 # Parse command-line arguments
@@ -70,7 +78,7 @@ case "$1" in
         display_users "$2"
         ;;
     -t|--time)
-        display_time "$2"
+        display_time "$2" "$3"
         ;;
     -h|--help)
         show_help
@@ -79,3 +87,4 @@ case "$1" in
         show_help
         ;;
 esac
+
