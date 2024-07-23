@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Install necessary dependencies
-sudo apt-get update
-sudo apt-get install -y net-tools docker.io nginx
-
 # Copy the devopsfetch script to /usr/local/bin
 sudo cp devopsfetch.sh /usr/local/bin/devopsfetch
 
@@ -38,3 +34,4 @@ cat <<EOF | sudo tee /etc/logrotate.d/devopsfetch
     endscript
 }
 EOF
+

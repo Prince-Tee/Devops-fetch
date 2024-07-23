@@ -6,7 +6,7 @@ function show_help() {
     echo "Options:"
     echo "  -p, --port [PORT_NUMBER]      Display active ports and services or details of a specific port"
     echo "  -d, --docker [CONTAINER_NAME] List Docker images and containers or details of a specific container"
-    echo "  -n, --nginx [DOMAIN]          Display Nginx domains and ports or details of a specific domain"
+    echo "  -n, --nginx [DOMAIN]          Display Nginx domains and where they are proxied to"
     echo "  -u, --users [USERNAME]        List all users and last login times or details of a specific user"
     echo "  -t, --time [START_DATE END_DATE] Display activities within a specified time range"
     echo "  -h, --help                    Show this help message"
@@ -31,12 +31,33 @@ function display_docker() {
     fi
 }
 
-# Function to display Nginx domains and ports
+# Function to display Nginx domains and where they are proxied to
 function display_nginx() {
     if [ -n "$1" ]; then
-        sudo nginx -T | grep -A 10 "server_name $1"
+        sudo nginx -T | awk -v domain="$1" '
+            $1 == "server_name" && $2 == domain {
+                getline;
+                while ($1 != "}") {
+                    if ($1 == "proxy_pass") {
+                        print "Domain: " domain " is proxied to " $2;
+                    }
+                    getline;
+                }
+            }
+        '
     else
-        sudo nginx -T | grep -E 'server_name|listen'
+        sudo nginx -T | awk '
+            $1 == "server_name" {
+                domain = $2;
+                getline;
+                while ($1 != "}") {
+                    if ($1 == "proxy_pass") {
+                        print "Domain: " domain " is proxied to " $2;
+                    }
+                    getline;
+                }
+            }
+        '
     fi
 }
 
